@@ -14,6 +14,11 @@ In this paper, we develop this single datum learning framework and investigate i
 * Extensive ablations of the proposed method, such as the dependency on the source image, the choice of augmentations and network architectures.
 * Large scale empirical evidence of neural networks' ability to extrapolate on > 13 image, video and audio datasets.
 * Qualitative insights on what and how neural networks trained with a single image learn.
+
+### Neuron visualizations
+[!Neurons](https://single-image-distill.github.io/resources/fig_7.png)
+We compare activation-maximization-based visualizations using the [Lucent](https://github.com/greentfrapp/lucent) library.
+Even though the model has never seen an image of a panda, the model trained with a teacher and only single-image inputs has a good idea of how a panda looks like.
   
 ### Install Requirements:
 In each folder `cifar\in1k\video` you will find a requirements.txt file. Install packages as follows:
