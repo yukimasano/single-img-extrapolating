@@ -39,14 +39,17 @@ There is a main "distill.py" file for each experiment type: small-scale and larg
 e.g. with Animal single-image dataset as follows:
 ```sh
 # in cifar folder:
-python3 distill.py --dataset=cifar10 --image=/path/to/single_image_dataset/ --student=wrn_16_4 --teacher=wrn_40_4 
+python3 distill.py --dataset=cifar10 --image=/path/to/single_image_dataset/ \
+                   --student=wrn_16_4 --teacher=wrn_40_4 
 ```
 Note that we provide a pretrained teacher model for reproducibility.
 
 #### 2b. Run distillation experiments for *ImageNet* with single-image dataset as follows:
 ```sh
 # in in1k folder:
-python3 distill.py --dataset=in1k --traindir=/path/to/dataset/ --testdir /ILSVRC12/val/ --save_dir=/path/to/savedir --student_arch=resnet50 --teacher_arch=resnet18 
+python3 distill.py --dataset=in1k --testdir /ILSVRC12/val/ \
+                   --traindir=/path/to/dataset/ \
+                   --save_dir=/path/to/savedir --student_arch=resnet50 --teacher_arch=resnet18 
 ```
 Note that teacher models are automatically downloaded from torchvision or timm. 
 
@@ -54,7 +57,8 @@ Note that teacher models are automatically downloaded from torchvision or timm.
 #### 2c. Run distillation experiments for *Kinetics* with single-image-created video dataset as follows:
 ```sh
 # in video folder:
-python3 distill.py --dataset=k400 --traindir=/dataset/with/vids --save_dir=/path/to/savedir --teacher_arch=x3d_xs --test_data_path /path/to/k400/val
+python3 distill.py --dataset=k400 --traindir=/dataset/with/vids --test_data_path /path/to/k400/val \
+                   --save_dir=/path/to/savedir --teacher_arch=x3d_xs 
 ```
 Note that teacher models are automatically downloaded from torchvideo when you distill a K400 model.
 
