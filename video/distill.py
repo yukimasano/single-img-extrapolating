@@ -1,48 +1,11 @@
 import os
 import argparse
-import itertools
-import logging
 
-import torch
-import torch.nn as nn
-import torch.nn.functional as F
-import pytorch_lightning
-import pytorchvideo
-
+from pytorch_lightning import Trainer
 from pytorch_lightning.plugins import DDPPlugin
-
-import pytorchvideo.data
-import torch.utils.data
-
-import torchmetrics
 from pytorch_lightning.callbacks import LearningRateMonitor
-from pytorch_lightning.callbacks import ModelCheckpoint
 from pytorch_lightning.loggers import TensorBoardLogger
 
-import pl_bolts
-import numpy as np
-from collections import defaultdict
-
-from pytorchvideo.transforms import (
-    ApplyTransformToKey,
-    Normalize,
-    RandomShortSideScale,
-    ShortSideScale,
-    UniformTemporalSubsample,
-    RandAugment, AugMix
-)
-
-from torchvision.transforms import (
-    Compose,
-    Lambda,
-    RandomCrop,
-    RandomHorizontalFlip
-)
-
-from torchvision.transforms._transforms_video import (
-    CenterCropVideo,
-    NormalizeVideo,
-)
 
 from distiller import VideoDistill, VideoDataModule, CheckpointEveryNEpoch
 
@@ -100,7 +63,7 @@ if __name__ == "__main__":
                                   name='video-distill', version='1')
 
     # setup trainer
-    trainer = pytorch_lightning.Trainer(gpus=-1, max_epochs=args.epochs,
+    trainer = Trainer(gpus=-1, max_epochs=args.epochs,
                       callbacks=[LearningRateMonitor(), CheckpointEveryNEpoch(args.eval_every, checkpoint_path)],
                       logger=[tb_logger], check_val_every_n_epoch=args.eval_every,
                       progress_bar_refresh_rate=1, accelerator='ddp',

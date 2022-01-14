@@ -1,10 +1,8 @@
-from PIL import Image, ImageFilter, ImageOps
-import math
-import random
+from PIL import ImageOps
+
 import numpy as np
 
 import torch
-import torchvision.transforms.functional as tf
 import pytorch_lightning as pl
         
 class Solarize(object):
@@ -42,7 +40,7 @@ def accuracy(output, target, topk=(1,)):
             res.append(correct_k.mul_(100.0 / batch_size))
         return res
 
-class CheckpointEveryEpoch(pl.Callback):
+class CheckpointEveryNEpoch(pl.Callback):
     def __init__(self, every, save_path):
         self.every = every
         self.save_path = save_path

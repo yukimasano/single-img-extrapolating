@@ -1,41 +1,38 @@
-import os
-import argparse
 import numpy as np
-
+import pytorch_lightning as pl
+import timm.models as timm_models
 import torch
 import torch.nn as nn
 import torch.nn.functional as F
 import torchvision.models as models
-import pytorch_lightning as pl
 from torch.optim import AdamW
 
 import utils
-import timm.models as timm_models
-from architectures import vision_transformer
+
 
 class ImgDistill(pl.LightningModule):
     def __init__(self,
-               num_classes,
-               learning_rate,
-               weight_decay,
-               temperature,
-               maxepochs,
-               teacher_ckpt,
-               student_arch="resnet18",
-               teacher_arch="resnet50",
-               lr_schedule=True,
-               use_shampoo=False,
-               use_timm=False,
-               milestones=[100,150]):
+                 num_classes,
+                 learning_rate,
+                 weight_decay,
+                 temperature,
+                 maxepochs,
+                 teacher_ckpt,
+                 student_arch="resnet18",
+                 teacher_arch="resnet50",
+                 lr_schedule=True,
+                 use_shampoo=False,
+                 use_timm=False,
+                 milestones=[100, 150]):
         super().__init__()
 
         if use_timm:
-            self.teacher = timm_models.__dict__[teacher_arch](pretrained=num_classes==1000, num_classes=num_classes)
+            self.teacher = timm_models.__dict__[teacher_arch](pretrained=num_classes == 1000, num_classes=num_classes)
         else:
-            self.teacher = models.__dict__[teacher_arch](pretrained=num_classes==1000, num_classes=num_classes)
+            self.teacher = models.__dict__[teacher_arch](pretrained=num_classes == 1000, num_classes=num_classes)
         if teacher_ckpt != "":
             state_dict = torch.load(teacher_ckpt, map_location="cpu")["state_dict"]
-            state_dict = {k.replace("module.",""):v for k,v in state_dict.items()}
+            state_dict = {k.replace("module.", ""): v for k, v in state_dict.items()}
             self.teacher.load_state_dict(state_dict)
         if num_classes == 1000:
             if "net" in student_arch:
@@ -67,8 +64,8 @@ class ImgDistill(pl.LightningModule):
 
     def kd_loss_fn(self, outputs, teacher_outputs):
         T = self.temperature
-        kd_loss = self.loss(F.log_softmax(outputs/T, dim=1),
-                    F.softmax(teacher_outputs/T, dim=1))
+        kd_loss = self.loss(F.log_softmax(outputs / T, dim=1),
+                            F.softmax(teacher_outputs / T, dim=1))
         return kd_loss
 
     def forward(self, x):
@@ -76,7 +73,7 @@ class ImgDistill(pl.LightningModule):
         return y
 
     def training_step(self, batch, batch_idx):
-        x,y = batch
+        x, y = batch
         with torch.no_grad():
             if self.with_cutmix:
                 lam = np.random.beta(self.beta, self.beta)
@@ -89,7 +86,7 @@ class ImgDistill(pl.LightningModule):
         student_predictions = self.student(x)
         loss = self.kd_loss_fn(student_predictions, teacher_predictions)
         self.log("train_loss", loss, on_step=True, on_epoch=False,
-                prog_bar=True, logger=True)
+                 prog_bar=True, logger=True)
         if self.lr_schedule:
             if self.trainer.is_last_batch:
                 lr = self.learning_rate
@@ -106,14 +103,14 @@ class ImgDistill(pl.LightningModule):
         x, y = batch
 
         student_predictions = self.student(x)
-        loss =  F.cross_entropy(student_predictions, y)
-        topk = utils.accuracy(student_predictions, y, topk=(1,5))
+        loss = F.cross_entropy(student_predictions, y)
+        topk = utils.accuracy(student_predictions, y, topk=(1, 5))
         same = (torch.argmax(student_predictions, dim=1) == y)
         acc = torch.sum(same) / float(y.size(0))
 
         self.log("val_acc", acc,
-                    on_step=False, on_epoch=True,
-                    prog_bar=True, logger=True)
+                 on_step=False, on_epoch=True,
+                 prog_bar=True, logger=True)
         self.log("val_loss", loss,
                  on_step=False, on_epoch=True,
                  prog_bar=True, logger=True)
@@ -128,5 +125,5 @@ class ImgDistill(pl.LightningModule):
 
     def configure_optimizers(self):
         optimizer = AdamW(self.student.parameters(), lr=self.learning_rate,
-                            weight_decay=self.weight_decay)
+                          weight_decay=self.weight_decay)
         return [optimizer]

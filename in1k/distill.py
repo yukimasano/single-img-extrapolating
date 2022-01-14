@@ -1,17 +1,17 @@
-import os
 import argparse
+import os
 
 import torch
 import torchvision.datasets as datasets
 import torchvision.transforms as transforms
-
-from pytorch_lightning import  Trainer
+from pytorch_lightning import Trainer
 from pytorch_lightning.callbacks import ModelCheckpoint
 from pytorch_lightning.loggers import TensorBoardLogger
 from pytorch_lightning.plugins import DDPPlugin
 
 import utils
 from distiller import ImgDistill
+
 
 CLASSES = {"in1k": 1000, "pets37": 37, "flowers102":102, "stl10":10, "places365": 365}
 
@@ -126,7 +126,7 @@ if __name__ == "__main__":
     # setup trainer
     trainer = Trainer(gpus=-1, max_epochs=maxepochs,
                         callbacks=[checkpoint_callback,
-                                   utils.CheckpointEveryEpoch(args.save_every, checkpoint_path)],
+                                   utils.CheckpointEveryNEpoch(args.save_every, checkpoint_path)],
                         logger=[tb_logger], check_val_every_n_epoch=args.eval_every,
                         progress_bar_refresh_rate=1, accelerator="ddp",
                         plugins=[DDPPlugin(find_unused_parameters=False)])

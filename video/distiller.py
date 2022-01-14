@@ -1,28 +1,19 @@
 import os
-import argparse
-import itertools
-import logging
+from collections import defaultdict
+import numpy as np
 
 import torch
 import torch.nn as nn
 import torch.nn.functional as F
-import pytorch_lightning
-import pytorchvideo
-from pytorchvideo.models.x3d import create_x3d
-
-from pytorch_lightning.plugins import DDPPlugin
-
-import pytorchvideo.data
 import torch.utils.data
 
+import pytorch_lightning
 import torchmetrics
-from pytorch_lightning.callbacks import LearningRateMonitor
-from pytorch_lightning.callbacks import ModelCheckpoint
-from pytorch_lightning.loggers import TensorBoardLogger
-
 import pl_bolts
-import numpy as np
-from collections import defaultdict
+
+import pytorchvideo
+import pytorchvideo.data
+from pytorchvideo.models.x3d import create_x3d
 
 from pytorchvideo.transforms import (
     ApplyTransformToKey,
@@ -45,12 +36,13 @@ from torchvision.transforms._transforms_video import (
     NormalizeVideo,
 )
 
+
 # Trainer
 class VideoDistill(pytorch_lightning.LightningModule):
     def __init__(self, dataset, teacher_ckpt, width_factor, depth_factor, warmup_epochs, epochs, lr, weight_decay):
         super().__init__()
         # models
-        num_classes = 101 if dataset=='ucf' else 400
+        num_classes = 101 if dataset == 'ucf' else 400
         self.teacher = create_teacher_model(num_classes=num_classes,
                                             teacher_ckpt=teacher_ckpt)
         self.student = create_student_model(num_classes=num_classes,
@@ -63,11 +55,7 @@ class VideoDistill(pytorch_lightning.LightningModule):
         self.lr = lr
         self.weight_decay = weight_decay
 
-
-
-        self.val_accuracy =  torchmetrics.Accuracy()
-
-
+        self.val_accuracy = torchmetrics.Accuracy()
 
         self.batch_key = "video"
         self.temperature = args.temperature
@@ -82,8 +70,8 @@ class VideoDistill(pytorch_lightning.LightningModule):
 
     def kd_loss_fn(self, outputs, teacher_outputs):
         T = self.temperature
-        kd_loss = self.loss(F.log_softmax(outputs/T, dim=1),
-                            F.softmax(teacher_outputs/T, dim=1))
+        kd_loss = self.loss(F.log_softmax(outputs / T, dim=1),
+                            F.softmax(teacher_outputs / T, dim=1))
         return kd_loss
 
     def forward(self, x):
@@ -95,14 +83,15 @@ class VideoDistill(pytorch_lightning.LightningModule):
             with torch.no_grad():
                 lam = np.random.beta(1.0, 1.0)
                 rand_index = torch.randperm(x.size()[0]).cuda()
-                bbx1, bby1, bbx2, bby2 = rand_bbox(x[:,0].size(), lam)
-                x[:, :, :, bbx1:bbx2, bby1:bby2] = x[rand_index, :,:, bbx1:bbx2, bby1:bby2]
+                bbx1, bby1, bbx2, bby2 = rand_bbox(x[:, 0].size(), lam)
+                x[:, :, :, bbx1:bbx2, bby1:bby2] = x[rand_index, :, :, bbx1:bbx2, bby1:bby2]
 
         with torch.no_grad():
             teacher_predictions = self.teacher(x)
         student_predictions = self.student(x)
         loss = self.kd_loss_fn(student_predictions, teacher_predictions)
-        self.log("train_loss", loss, on_step=True, on_epoch=False, sync_dist=True, prog_bar=True, batch_size=self.batch_size)
+        self.log("train_loss", loss, on_step=True, on_epoch=False, sync_dist=True, prog_bar=True,
+                 batch_size=self.batch_size)
         return loss
 
     def validation_step(self, batch, batch_idx):
@@ -120,7 +109,7 @@ class VideoDistill(pytorch_lightning.LightningModule):
         This accumulated predictions per video-id, this way we can average them.
         Standard practice in video evaluations.
         """
-        if batch_idx  == 0:
+        if batch_idx == 0:
             self.accum_predictions = defaultdict(list)
             self.accum_labels = defaultdict()
 
@@ -145,7 +134,7 @@ class VideoDistill(pytorch_lightning.LightningModule):
         for k, y in self.accum_predictions.items():
             y_ = torch.stack(y).mean(0)
             correct.append(self.accum_labels[k] == y_.argmax(0))
-        print(f"video_test_acc: {torch.tensor(correct).float().mean()*100:.2f}")
+        print(f"video_test_acc: {torch.tensor(correct).float().mean() * 100:.2f}")
         self.log("video_test_acc", torch.tensor(correct).float().mean(),
                  on_step=False, on_epoch=True,
                  prog_bar=True,
@@ -163,7 +152,6 @@ class VideoDistill(pytorch_lightning.LightningModule):
         return [optimizer], [scheduler]
 
 
-
 # Models
 def create_student_model(width_factor, depth_factor, num_classes):
     return create_x3d(model_num_class=num_classes,
@@ -174,6 +162,7 @@ def create_student_model(width_factor, depth_factor, num_classes):
                       width_factor=width_factor,
                       depth_factor=depth_factor)
 
+
 def create_teacher_model(num_classes, teacher_ckpt):
     if num_classes == 101:
         model = create_x3d(model_num_class=num_classes,
@@ -181,17 +170,20 @@ def create_teacher_model(num_classes, teacher_ckpt):
                            input_clip_length=4,
                            head_activation=None)
         ms = model.state_dict()
-        pre_trained_state_dict = torch.load(teacher_ckpt, map_location='cpu')["state_dict"] # you need to pretrain this
-        pre_trained_state_dict = {k.replace('model.', ''):v for k,v in pre_trained_state_dict.items() if v.shape == ms[k.replace('model.', '')].shape}
+        pre_trained_state_dict = torch.load(teacher_ckpt, map_location='cpu')["state_dict"]  # you need to pretrain this
+        pre_trained_state_dict = {k.replace('model.', ''): v for k, v in pre_trained_state_dict.items() if
+                                  v.shape == ms[k.replace('model.', '')].shape}
         model.load_state_dict(pre_trained_state_dict)
     else:
         model = create_x3d(model_num_class=num_classes,
                            input_crop_size=160, bottleneck_factor=2.25,
                            width_factor=2.0, depth_factor=2.2,
                            input_clip_length=4, head_activation=None)
-        print([k for k,v in model.state_dict().items()])
-        model = torch.hub.load("facebookresearch/pytorchvideo:main", model='x3d_xs', pretrained=True, head_activation=None)
+        print([k for k, v in model.state_dict().items()])
+        model = torch.hub.load("facebookresearch/pytorchvideo:main", model='x3d_xs', pretrained=True,
+                               head_activation=None)
     return model
+
 
 # Datasets
 class VideoDataModule(pytorch_lightning.LightningDataModule):
@@ -206,10 +198,10 @@ class VideoDataModule(pytorch_lightning.LightningDataModule):
 
         self.sampling_rate = 1
         self.frames_per_second = 12
-        self.clip_duration = (self.num_frames * self.sampling_rate)/self.frames_per_second
+        self.clip_duration = (self.num_frames * self.sampling_rate) / self.frames_per_second
 
         self.sampling_rate_val = 12
-        self.clip_duration_val = (self.num_frames * self.sampling_rate_val)/self.frames_per_second
+        self.clip_duration_val = (self.num_frames * self.sampling_rate_val) / self.frames_per_second
 
         self.test_data_path = test_data_path
         self.dist_data_path = dist_data_path
@@ -224,7 +216,7 @@ class VideoDataModule(pytorch_lightning.LightningDataModule):
                 key="video",
                 transform=Compose([
                     UniformTemporalSubsample(self.num_frames),
-                    Lambda(lambda x: (AugMix()(x.permute(1,0,2,3))).permute(1,0,2,3)),
+                    Lambda(lambda x: (AugMix()(x.permute(1, 0, 2, 3))).permute(1, 0, 2, 3)),
                     Lambda(lambda x: x / 255.0),
                     Normalize(self.mean, self.std),
                     RandomShortSideScale(min_size=183, max_size=229),
@@ -249,7 +241,7 @@ class VideoDataModule(pytorch_lightning.LightningDataModule):
                 key="video",
                 transform=Compose([
                     UniformTemporalSubsample(self.num_frames),
-                    Lambda(lambda x: x/255.0),
+                    Lambda(lambda x: x / 255.0),
                     NormalizeVideo(self.mean, self.std),
                     ShortSideScale(size=self.side_size),
                     CenterCropVideo(crop_size=(self.crop_size, self.crop_size))
@@ -272,7 +264,7 @@ class VideoDataModule(pytorch_lightning.LightningDataModule):
                 key="video",
                 transform=Compose([
                     UniformTemporalSubsample(self.num_frames),
-                    Lambda(lambda x: x/255.0),
+                    Lambda(lambda x: x / 255.0),
                     NormalizeVideo(self.mean, self.std),
                     ShortSideScale(size=self.side_size),
                     CenterCropVideo(crop_size=(self.crop_size, self.crop_size))
@@ -289,6 +281,7 @@ class VideoDataModule(pytorch_lightning.LightningDataModule):
             num_workers=self.num_workers,
         )
 
+
 # Other helper functions below:
 
 class CheckpointEveryNEpoch(pytorch_lightning.Callback):
@@ -302,6 +295,7 @@ class CheckpointEveryNEpoch(pytorch_lightning.Callback):
         if epoch % self.every == 0:
             ckpt_path = f"{self.save_path}/ckpt_{epoch}.ckpt"
             trainer.save_checkpoint(ckpt_path)
+
 
 def rand_bbox(size, lam):
     W = size[2]
