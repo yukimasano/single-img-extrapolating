@@ -42,7 +42,7 @@ parser.add_argument("--traindir", default="/tmp/train/", type=str, help="folder 
 parser.add_argument("--testdir", default="/datasets/ILSVRC12/val/", type=str, help="folder with folder(s) of test imgs")
 
 # saving etc.
-parser.add_argument("--save_dir",default="save_dir/", type=str, help="saving dir")
+parser.add_argument("--save_dir",default="./output/", type=str, help="saving dir")
 parser.add_argument("--dataset", default="in1k", type=str, help="dataset name -- for saving and choosing num_classes")
 parser.add_argument("--workers", default=8, type=int, help="number of workers")
 parser.add_argument("--save_every", default=10, type=int, help="save every n epochs")
