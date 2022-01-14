@@ -48,8 +48,7 @@ Note that we provide a pretrained teacher model for reproducibility.
 ```sh
 # in in1k folder:
 python3 distill.py --dataset=in1k --testdir /ILSVRC12/val/ \
-                   --traindir=/path/to/dataset/ \
-                   --save_dir=/path/to/savedir --student_arch=resnet50 --teacher_arch=resnet18 
+                   --traindir=/path/to/dataset/ --student_arch=resnet50 --teacher_arch=resnet18 
 ```
 Note that teacher models are automatically downloaded from torchvision or timm. 
 
@@ -57,8 +56,7 @@ Note that teacher models are automatically downloaded from torchvision or timm.
 #### 2c. Run distillation experiments for *Kinetics* with single-image-created video dataset as follows:
 ```sh
 # in video folder:
-python3 distill.py --dataset=k400 --traindir=/dataset/with/vids --test_data_path /path/to/k400/val \
-                   --save_dir=/path/to/savedir 
+python3 distill.py --dataset=k400 --traindir=/dataset/with/vids --test_data_path /path/to/k400/val 
 ```
 Note that teacher models are automatically downloaded from torchvideo when you distill a K400 model.
 
