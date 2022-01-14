@@ -58,7 +58,7 @@ Note that teacher models are automatically downloaded from torchvision or timm.
 ```sh
 # in video folder:
 python3 distill.py --dataset=k400 --traindir=/dataset/with/vids --test_data_path /path/to/k400/val \
-                   --save_dir=/path/to/savedir --teacher_arch=x3d_xs 
+                   --save_dir=/path/to/savedir 
 ```
 Note that teacher models are automatically downloaded from torchvideo when you distill a K400 model.
 
