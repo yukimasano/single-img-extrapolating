@@ -1,4 +1,4 @@
-Extrapolating from a Single Image to a Thousand Classes using Distillation
+[Extrapolating from a Single Image to a Thousand Classes using Distillation](https://arxiv.org/abs/2112.00725)
 ---
 ![Our-method](https://single-image-distill.github.io/resources/animation_final.gif)
 
