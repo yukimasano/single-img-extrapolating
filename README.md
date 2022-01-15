@@ -34,6 +34,7 @@ To generate single image data, we refer to the [data_generation folder](data_gen
 
 ### 2. Run Experiments:
 There is a main "distill.py" file for each experiment type: small-scale and large-scale images and video.
+Note: 2a uses tensorflow and 2b, 2c use pytorch.
 
 #### 2a. Run distillation experiments for *CIFAR-10/100*
 e.g. with Animal single-image dataset as follows:
