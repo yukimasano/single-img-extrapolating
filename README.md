@@ -61,6 +61,26 @@ python3 distill.py --dataset=k400 --traindir=/dataset/with/vids --test_data_path
 ```
 Note that teacher models are automatically downloaded from torchvideo when you distill a K400 model.
 
+## Pretrained models
+Large-scale (224x224-sized) image ResNet-50 models trained for 200ep:
+
+| Dataset     | Teacher | Student | Performance | Checkpoint                                                                             |
+|-------------|---------|---------|-------------|----------------------------------------------------------------------------------------|
+| ImageNet-12 | R18     | R50     | 59.1%       | [R50 weights](https://www.dropbox.com/s/h13kgqdo5iqj8s7/in1k_r18_to_r50.pth?dl=0)      |
+| ImageNet-12 | R50     | R50     | 53.5%       | [R50 weights](https://www.dropbox.com/s/gnfjpx8z4avkzlf/in1k_r50_to_r50.pth?dl=0)      |
+| Places365   | R18     | R50     | 54.7%       | [R50 weights](https://www.dropbox.com/s/6idjbs3ig065a07/places365_r18_to_r50.pth?dl=0) |
+| Flowers101  | R18     | R50     | 58.1%       | [R50 weights](https://www.dropbox.com/s/ho14zd8m3bwrhw9/flowers_r18_to_r50.pth?dl=0)   |
+| Pets37      | R18     | R50     | 83.7%       | [R50 weights](https://www.dropbox.com/s/tatmrtv54t4v7an/pets_r18_to_r50.pth?dl=0)      |
+| IN100       | R18     | R50     | 74.1%       | [R50 weights](https://www.dropbox.com/s/jm910bepij3eunp/in100_r18_to_r50.pth?dl=0)     |
+| STL-10      | R18     | R50     | 93.0%       | [R50 weights](https://www.dropbox.com/s/t4k9yswcyp3a880/stl10_r18_to_r50.pth?dl=0)     |
+
+Video x3d_s_e (expanded) models (160x160 crop, 4frames) trained for 400ep:
+
+| Dataset | Teacher | Student  | Performance | Checkpoint                                                                              |
+|---------|---------|----------|-------------|-----------------------------------------------------------------------------------------|
+| K400    | x3d_xs  | x3d_xs_e | 53.57%      | [weights](https://www.dropbox.com/s/zbvtl14jakdltc6/k400-400ep-x3d_xs_wf5_df3.pth?dl=0) |
+| UCF101  | x3d_xs  | x3d_xs_e | 77.32%      | [weights](https://www.dropbox.com/s/vy67dmk41z44c1t/ucf-400ep-x3d_xs_wf5_df3.pth?dl=0)  |
+
 
 ## Citation
 ```
