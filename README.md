@@ -1,5 +1,7 @@
 [Extrapolating from a Single Image to a Thousand Classes using Distillation](https://arxiv.org/abs/2112.00725)
 ---
+by Yuki M. Asano* and Aaqib Saeed*  (*Equal Contribution)
+
 ![Our-method](https://single-image-distill.github.io/resources/animation_final.gif)
 
 *Extrapolating from one image.* 
