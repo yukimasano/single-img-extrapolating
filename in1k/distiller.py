@@ -35,16 +35,10 @@ class ImgDistill(pl.LightningModule):
             state_dict = {k.replace("module.", ""): v for k, v in state_dict.items()}
             self.teacher.load_state_dict(state_dict)
         if num_classes == 1000:
-            if "net" in student_arch:
-                self.student = models.__dict__[student_arch](pretrained=False, num_classes=num_classes)
-            else:
-                self.student = vision_transformer.vit_small(num_classes=num_classes)
+            self.student = models.__dict__[student_arch](pretrained=False, num_classes=num_classes)
         else:
-            if "net" in student_arch:
-                self.student = models.__dict__[student_arch](pretrained=False)
-                self.student.fc = torch.nn.Linear(self.student.fc.weight.data.size(1), num_classes)
-            else:
-                self.student = vision_transformer.vit_small(num_classes=num_classes)
+            self.student = models.__dict__[student_arch](pretrained=False)
+            self.student.fc = torch.nn.Linear(self.student.fc.weight.data.size(1), num_classes)
 
         self.learning_rate = learning_rate
         self.weight_decay = weight_decay
