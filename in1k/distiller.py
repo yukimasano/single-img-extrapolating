@@ -21,7 +21,6 @@ class ImgDistill(pl.LightningModule):
                  student_arch="resnet18",
                  teacher_arch="resnet50",
                  lr_schedule=True,
-                 use_shampoo=False,
                  use_timm=False,
                  milestones=[100, 150]):
         super().__init__()
@@ -44,7 +43,6 @@ class ImgDistill(pl.LightningModule):
         self.weight_decay = weight_decay
         self.temperature = temperature
         self.lr_schedule = lr_schedule
-        self.shampoo = use_shampoo
         self.milestones = milestones
 
         self.maxepochs = maxepochs
