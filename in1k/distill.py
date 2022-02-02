@@ -121,7 +121,8 @@ if __name__ == "__main__":
                             student_arch=args.student_arch,
                             lr_schedule=args.lr_schedule,
                             teacher_arch=args.teacher_arch,
-                            use_timm=args.use_timm)
+                            use_timm=args.use_timm,
+                            milestones=args.milestones)
     # setup trainer
     trainer = Trainer(gpus=-1, max_epochs=args.epochs,
                         callbacks=[checkpoint_callback,
