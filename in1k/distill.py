@@ -121,7 +121,6 @@ if __name__ == "__main__":
                             student_arch=args.student_arch,
                             lr_schedule=args.lr_schedule,
                             teacher_arch=args.teacher_arch,
-                            use_shampoo=args.use_shampoo,
                             use_timm=args.use_timm)
     # setup trainer
     trainer = Trainer(gpus=-1, max_epochs=maxepochs,
