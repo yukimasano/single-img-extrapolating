@@ -102,7 +102,7 @@ if __name__ == "__main__":
         shuffle=False)
 
     # setup logging and saving dirs
-    checkpoint_path = os.path.join(args.save_dir, version)
+    checkpoint_path = os.path.join(args.save_dir)
     tb_logger = TensorBoardLogger(save_dir=args.tensorboard_dir,
                     name=args.dataset, version='1')
     checkpoint_callback = ModelCheckpoint(dirpath=checkpoint_path, 
