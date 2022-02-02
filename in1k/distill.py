@@ -123,7 +123,7 @@ if __name__ == "__main__":
                             teacher_arch=args.teacher_arch,
                             use_timm=args.use_timm)
     # setup trainer
-    trainer = Trainer(gpus=-1, max_epochs=maxepochs,
+    trainer = Trainer(gpus=-1, max_epochs=args.epochs,
                         callbacks=[checkpoint_callback,
                                    utils.CheckpointEveryNEpoch(args.save_every, checkpoint_path)],
                         logger=[tb_logger], check_val_every_n_epoch=args.eval_every,
