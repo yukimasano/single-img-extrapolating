@@ -13,13 +13,13 @@ import utils
 from distiller import ImgDistill
 
 
-CLASSES = {"in1k": 1000, "pets37": 37, "flowers102":102, "stl10":10, "places365": 365}
+CLASSES = {"in1k": 1000, "pets37": 37, "flowers102": 102, "stl10": 10, "places365": 365}
 
 
 parser = argparse.ArgumentParser(description="Knowledge Distillation From a Single Image.")
 
 # Teacher settings
-parser.add_argument("--teacher_arch",default="resnet18", type=str, help="arch for teacher")
+parser.add_argument("--teacher_arch", default="resnet18", type=str, help="arch for teacher")
 parser.add_argument("--use_timm", action="store_true", help="use strong-aug trained timm models?")
 parser.add_argument("--teacher_ckpt", default="", type=str, help="ckpt to load teacher. not needed for IN-1k")
 
@@ -42,12 +42,11 @@ parser.add_argument("--traindir", default="/tmp/train/", type=str, help="folder 
 parser.add_argument("--testdir", default="/datasets/ILSVRC12/val/", type=str, help="folder with folder(s) of test imgs")
 
 # saving etc.
-parser.add_argument("--save_dir",default="./output/", type=str, help="saving dir")
+parser.add_argument("--save_dir", default="./output/", type=str, help="saving dir")
 parser.add_argument("--dataset", default="in1k", type=str, help="dataset name -- for saving and choosing num_classes")
 parser.add_argument("--workers", default=8, type=int, help="number of workers")
 parser.add_argument("--save_every", default=10, type=int, help="save every n epochs")
 parser.add_argument("--eval_every", default=1, type=int, help="save every n epochs")
-parser.add_argument("--tensorboard_dir", default="./tensorboard/kd", type=str, help="directory for tensorboard ")
 
 
 if __name__ == "__main__":
@@ -99,36 +98,41 @@ if __name__ == "__main__":
         batch_size=args.batch_size,
         num_workers=args.workers,
         pin_memory=True,
-        shuffle=False)
+        shuffle=False, persistent_workers=True)
 
     # setup logging and saving dirs
-    checkpoint_path = os.path.join(args.save_dir)
-    tb_logger = TensorBoardLogger(save_dir=args.tensorboard_dir,
-                    name=args.dataset, version='1')
-    checkpoint_callback = ModelCheckpoint(dirpath=checkpoint_path, 
-                            monitor="val_acc",
-                            save_last=True, 
-                            filename=f"best_{args.dataset}")
+    ckpt_path = os.path.join(args.save_dir)
+    tensorboard_dir = f"./tensorboard/{args.save_dir.replace('/scratch/shared/beegfs/yuki/kd','').replace('/','-')}"
+    tb_logger = TensorBoardLogger(save_dir=tensorboard_dir, name=args.dataset, version='1')
+    checkpoint_callback = ModelCheckpoint(
+        dirpath=ckpt_path,
+        monitor="val_acc",
+        save_last=True, mode='max',
+        filename=f"best_{args.dataset}"
+    )
 
     # training module with teacher and student and optimizer
     distiller = ImgDistill(
-                            num_classes=CLASSES[args.dataset],
-                            learning_rate=args.lr,
-                            weight_decay=args.wd,
-                            temperature=args.temperature,
-                            maxepochs=args.epochs,
-                            teacher_ckpt=args.teacher_ckpt,
-                            student_arch=args.student_arch,
-                            lr_schedule=args.lr_schedule,
-                            teacher_arch=args.teacher_arch,
-                            use_timm=args.use_timm,
-                            milestones=args.milestones)
+        num_classes=CLASSES[args.dataset],
+        learning_rate=args.lr,
+        weight_decay=args.wd,
+        temperature=args.temperature,
+        maxepochs=args.epochs,
+        teacher_ckpt=args.teacher_ckpt,
+        student_arch=args.student_arch,
+        lr_schedule=args.lr_schedule,
+        teacher_arch=args.teacher_arch,
+        use_timm=args.use_timm,
+        milestones=args.milestones
+    )
+
     # setup trainer
-    trainer = Trainer(gpus=-1, max_epochs=args.epochs,
-                        callbacks=[checkpoint_callback,
-                                   utils.CheckpointEveryNEpoch(args.save_every, checkpoint_path)],
-                        logger=[tb_logger], check_val_every_n_epoch=args.eval_every,
-                        progress_bar_refresh_rate=1, accelerator="ddp",
-                        plugins=[DDPPlugin(find_unused_parameters=False)])
+    trainer = Trainer(
+        gpus=-1, max_epochs=args.epochs, callbacks=[checkpoint_callback, utils.SaveEvery(args.save_every, ckpt_path)],
+        logger=tb_logger, check_val_every_n_epoch=args.eval_every,
+        progress_bar_refresh_rate=1, accelerator="ddp",
+        plugins=[DDPPlugin(find_unused_parameters=False)]
+    )
+
     # train
     trainer.fit(distiller, train_loader, val_loader)

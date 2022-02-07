@@ -39,7 +39,7 @@ from torchvision.transforms._transforms_video import (
 
 # Trainer
 class VideoDistill(pytorch_lightning.LightningModule):
-    def __init__(self, dataset, teacher_ckpt, width_factor, depth_factor, warmup_epochs, epochs, lr, weight_decay):
+    def __init__(self, dataset, teacher_ckpt, width_factor, depth_factor, warmup_epochs, epochs, lr, weight_decay, batch_size, temperature=8):
         super().__init__()
         # models
         num_classes = 101 if dataset == 'ucf' else 400
@@ -58,33 +58,31 @@ class VideoDistill(pytorch_lightning.LightningModule):
         self.val_accuracy = torchmetrics.Accuracy()
 
         self.batch_key = "video"
-        self.temperature = args.temperature
+        self.temperature = temperature
         self.loss = nn.KLDivLoss(reduction='batchmean')
 
         self.teacher.eval()
         self.with_cutmix = True
-        self.batch_size = args.batch_size
+        self.batch_size = batch_size
 
         for param in self.teacher.parameters():
             param.requires_grad = False
 
     def kd_loss_fn(self, outputs, teacher_outputs):
-        T = self.temperature
-        kd_loss = self.loss(F.log_softmax(outputs / T, dim=1),
-                            F.softmax(teacher_outputs / T, dim=1))
+        kd_loss = self.loss(F.log_softmax(outputs / self.temperature, dim=1),
+                            F.softmax(teacher_outputs / self.temperature, dim=1))
         return kd_loss
 
     def forward(self, x):
         return self.student(x)
 
+    def on_train_epoch_start(self):
+        self.teacher.eval()
+
     def training_step(self, batch, batch_idx):
         x = batch[self.batch_key]
         if self.with_cutmix:
-            with torch.no_grad():
-                lam = np.random.beta(1.0, 1.0)
-                rand_index = torch.randperm(x.size()[0]).cuda()
-                bbx1, bby1, bbx2, bby2 = rand_bbox(x[:, 0].size(), lam)
-                x[:, :, :, bbx1:bbx2, bby1:bby2] = x[rand_index, :, :, bbx1:bbx2, bby1:bby2]
+            x = cutmixed(x)
 
         with torch.no_grad():
             teacher_predictions = self.teacher(x)
@@ -295,6 +293,15 @@ class CheckpointEveryNEpoch(pytorch_lightning.Callback):
         if epoch % self.every == 0:
             ckpt_path = f"{self.save_path}/ckpt_{epoch}.ckpt"
             trainer.save_checkpoint(ckpt_path)
+
+
+def cutmixed(x):
+    with torch.no_grad():
+        lam = np.random.beta(1.0, 1.0)
+        rand_index = torch.randperm(x.size()[0]).cuda()
+        bbx1, bby1, bbx2, bby2 = rand_bbox(x.size(), lam)
+        x[:, :, bbx1:bbx2, bby1:bby2] = x[rand_index, :, bbx1:bbx2, bby1:bby2]
+    return x
 
 
 def rand_bbox(size, lam):

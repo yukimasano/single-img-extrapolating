@@ -49,7 +49,7 @@ if __name__ == "__main__":
                                        width_factor=args.width_factor,
                                        depth_factor=args.depth_factor,
                                        warmup_epochs=args.warmup_epochs,
-                                       epochs=args.epochs,
+                                       epochs=args.epochs, batch_size=args.batch_size,
                                        lr=args.lr, weight_decay=args.weight_decay)
     # data module with dataloaders
     data_module = VideoDataModule(test_data_path=args.test_data_path,
