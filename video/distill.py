@@ -15,29 +15,29 @@ parser.add_argument("--temperature", default=5, type=float)
 
 # Student model
 parser.add_argument("--depth_factor", default=3.0, type=float)
-parser.add_argument("--width_factor", default=4.0, type=float)
+parser.add_argument("--width_factor", default=5.0, type=float)
 
 # Teacher model
 parser.add_argument("--teacher_ckpt", default='/path/to/x3d_xs-teacher/ckpt', type=str)
 
 # Optimizer settings
-parser.add_argument("--lr", "--learning-rate", default=1e-3, type=float)
-parser.add_argument("--weight_decay", default=0.00005, type=float)
+parser.add_argument("--lr", "--learning-rate", default=1e-3, type=float) # with 2 gpus
+parser.add_argument("--weight_decay", default=0., type=float)
 
 # Training settings
-parser.add_argument("--batch_size", default=240, type=int)
+parser.add_argument("--batch_size", default=128, type=int)
 parser.add_argument("--warmup_epochs", default=5, type=int)
-parser.add_argument("--epochs", default=200, type=int)
+parser.add_argument("--epochs", default=400, type=int)
 
 # Dataset
-parser.add_argument("--dataset", default='ucf or k400', choices=['ucf','k400'],
+parser.add_argument("--dataset", default='ucf or k400', choices=['ucf', 'k400'],
                     type=str, help="only used to choose teacher and num_classes")
 parser.add_argument("--test_data_path", default='/path/to/UCF101/val', type=str)
 parser.add_argument("--dist_data_path", default='/path/to/folder/train', type=str)
 parser.add_argument("--workers", default=12, type=int)
 
 # remainder
-parser.add_argument("--eval_every", default=1, type=int)
+parser.add_argument("--eval_every", default=10, type=int)
 parser.add_argument("--save_dir", default='./output/', type=str)
 
 
