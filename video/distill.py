@@ -50,6 +50,7 @@ if __name__ == "__main__":
                                        depth_factor=args.depth_factor,
                                        warmup_epochs=args.warmup_epochs,
                                        epochs=args.epochs, batch_size=args.batch_size,
+                                       temperature=args.temperature,
                                        lr=args.lr, weight_decay=args.weight_decay)
     # data module with dataloaders
     data_module = VideoDataModule(test_data_path=args.test_data_path,
@@ -57,8 +58,8 @@ if __name__ == "__main__":
                                   batch_size=args.batch_size, workers=args.workers)
 
     # setup logging and saving dirs
-    checkpoint_path = os.path.join(args.experiment_dir, 'checkpoints')
-    tensorboard_dir = f"./tensorboard/{args.save_dir.replace('/','-')}"
+    checkpoint_path = os.path.join(args.save_dir, 'checkpoints')
+    tensorboard_dir = f"./tensorboard/{args.save_dir.replace('/','-')[1:]}"
     tb_logger = TensorBoardLogger(save_dir=tensorboard_dir,
                                   name='video-distill', version='1')
 

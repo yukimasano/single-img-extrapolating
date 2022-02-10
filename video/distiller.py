@@ -21,7 +21,7 @@ from pytorchvideo.transforms import (
     RandomShortSideScale,
     ShortSideScale,
     UniformTemporalSubsample,
-    RandAugment, AugMix
+    AugMix
 )
 
 from torchvision.transforms import (
@@ -39,7 +39,9 @@ from torchvision.transforms._transforms_video import (
 
 # Trainer
 class VideoDistill(pytorch_lightning.LightningModule):
-    def __init__(self, dataset, teacher_ckpt, width_factor, depth_factor, warmup_epochs, epochs, lr, weight_decay, batch_size, temperature=8):
+    def __init__(self, dataset, teacher_ckpt, width_factor, depth_factor,
+                 warmup_epochs, epochs, lr, weight_decay, batch_size,
+                 temperature=5):
         super().__init__()
         # models
         num_classes = 101 if dataset == 'ucf' else 400
@@ -199,7 +201,7 @@ class VideoDataModule(pytorch_lightning.LightningDataModule):
         self.clip_duration = (self.num_frames * self.sampling_rate) / self.frames_per_second
 
         self.sampling_rate_val = 12
-        self.clip_duration_val = (self.num_frames * self.sampling_rate_val) / self.frames_per_second
+        self.clip_duration_val = (self.num_frames * self.sampling_rate_val) / 30.
 
         self.test_data_path = test_data_path
         self.dist_data_path = dist_data_path
