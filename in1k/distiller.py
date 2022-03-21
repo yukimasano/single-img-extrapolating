@@ -1,4 +1,3 @@
-import numpy as np
 import pytorch_lightning as pl
 import timm.models as timm_models
 import torch
@@ -6,8 +5,6 @@ import torch.nn as nn
 import torch.nn.functional as F
 import torchvision.models as models
 from torch.optim import AdamW
-import vision_transformer
-import cait_models
 import utils
 
 
@@ -23,7 +20,8 @@ class ImgDistill(pl.LightningModule):
                  teacher_arch="resnet50",
                  lr_schedule=True,
                  use_timm=False,
-                 milestones=[100, 150]):
+                 milestones=[100, 150]
+                 ):
         super().__init__()
 
         if use_timm:

@@ -13,7 +13,7 @@ import utils
 from distiller import ImgDistill
 
 
-CLASSES = {"in1k": 1000, "pets37": 37, "flowers102": 102, "stl10": 10, "places365": 365}
+CLASSES = {"in1k": 1000, "pets37": 37, "flowers102": 102, "stl10": 10, "places365": 365, 'in100': 100}
 
 
 parser = argparse.ArgumentParser(description="Knowledge Distillation From a Single Image.")
@@ -47,6 +47,8 @@ parser.add_argument("--dataset", default="in1k", type=str, help="dataset name --
 parser.add_argument("--workers", default=8, type=int, help="number of workers")
 parser.add_argument("--save_every", default=10, type=int, help="save every n epochs")
 parser.add_argument("--eval_every", default=1, type=int, help="save every n epochs")
+parser.add_argument("--validate", default="", type=str, help="val only")
+
 
 
 if __name__ == "__main__":
@@ -88,7 +90,6 @@ if __name__ == "__main__":
         transforms.ToTensor(),
         normalize
     ]
-
     # Define eval dataset
     val_dataset = datasets.ImageFolder(
         args.testdir,
@@ -102,13 +103,18 @@ if __name__ == "__main__":
 
     # setup logging and saving dirs
     ckpt_path = os.path.join(args.save_dir)
-    tensorboard_dir = f"./tensorboard/{args.save_dir.replace('/scratch/shared/beegfs/yuki/kd','').replace('/','-')}"
+    tensorboard_dir = f"./tensorboard/{args.save_dir.replace('/','-')}"
     tb_logger = TensorBoardLogger(save_dir=tensorboard_dir, name=args.dataset, version='1')
     checkpoint_callback = ModelCheckpoint(
         dirpath=ckpt_path,
         monitor="val_acc",
         save_last=True, mode='max',
         filename=f"best_{args.dataset}"
+    )
+    last_callback = ModelCheckpoint(
+        dirpath=ckpt_path,
+        save_last=True,
+        filename=f"last"
     )
 
     # training module with teacher and student and optimizer
@@ -123,16 +129,25 @@ if __name__ == "__main__":
         lr_schedule=args.lr_schedule,
         teacher_arch=args.teacher_arch,
         use_timm=args.use_timm,
-        milestones=args.milestones
+        milestones=args.milestones,
     )
 
     # setup trainer
     trainer = Trainer(
-        gpus=-1, max_epochs=args.epochs, callbacks=[checkpoint_callback, utils.SaveEvery(args.save_every, ckpt_path)],
+        gpus=-1, max_epochs=args.epochs, callbacks=[checkpoint_callback,last_callback, utils.SaveEvery(args.save_every, ckpt_path)],
         logger=tb_logger, check_val_every_n_epoch=args.eval_every,
         progress_bar_refresh_rate=1, accelerator="ddp",
-        plugins=[DDPPlugin(find_unused_parameters=False)]
+        plugins=[DDPPlugin(find_unused_parameters=False)],
+        resume_from_checkpoint=ckpt_path+'/last.ckpt' if os.path.isfile(ckpt_path+'/last.ckpt') else False
     )
-
-    # train
-    trainer.fit(distiller, train_loader, val_loader)
+    if args.validate != '':
+        to_load = ckpt_path+f'/{args.validate}.ckpt'
+        print("ckpt exists?:", os.path.isfile(to_load), flush=True)
+        ckpt = torch.load(to_load, map_location='cpu')['state_dict']
+        ckpt = {k.replace('student.',''):v for k,v in ckpt.items() if 'student' in k}
+        distiller.student.load_state_dict(ckpt)
+        print("loading: ", to_load)
+        trainer.test(distiller, val_loader=val_loader)
+    else:
+        # train
+        trainer.fit(distiller, train_loader, val_loader)
