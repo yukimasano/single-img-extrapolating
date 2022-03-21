@@ -7,7 +7,7 @@ by Yuki M. Asano* and Aaqib Saeed*  (*Equal Contribution)
 *Extrapolating from one image.* 
 Strongly augmented patches from a single image are used to train a student (S) to distinguish semantic classes, such as those in ImageNet. 
 The student neural network is initialized randomly and learns from a pretrained teacher (T) via KL-divergence. 
-Although almost none of target categories are present in the image, we find student performances of > 59% for classifying ImageNet's 1000 classes. 
+Although almost none of target categories are present in the image, we find student performances of **>66%** Top-1 Acc for classifying ImageNet's 1000 classes. 
 In this paper, we develop this single datum learning framework and investigate it across datasets and domains.
 
 ## Key contributions
@@ -69,20 +69,20 @@ Large-scale (224x224-sized) image ResNet-50 models trained for 200ep:
 
 | Dataset     | Teacher | Student | Performance | Checkpoint                                                                             |
 |-------------|---------|---------|-------------|----------------------------------------------------------------------------------------|
-| ImageNet-12 | R18     | R50     | 59.1%       | [R50 weights](https://www.dropbox.com/s/h13kgqdo5iqj8s7/in1k_r18_to_r50.pth?dl=0)      |
-| ImageNet-12 | R50     | R50     | 53.5%       | [R50 weights](https://www.dropbox.com/s/gnfjpx8z4avkzlf/in1k_r50_to_r50.pth?dl=0)      |
-| Places365   | R18     | R50     | 54.7%       | [R50 weights](https://www.dropbox.com/s/6idjbs3ig065a07/places365_r18_to_r50.pth?dl=0) |
-| Flowers101  | R18     | R50     | 58.1%       | [R50 weights](https://www.dropbox.com/s/ho14zd8m3bwrhw9/flowers_r18_to_r50.pth?dl=0)   |
-| Pets37      | R18     | R50     | 83.7%       | [R50 weights](https://www.dropbox.com/s/tatmrtv54t4v7an/pets_r18_to_r50.pth?dl=0)      |
-| IN100       | R18     | R50     | 74.1%       | [R50 weights](https://www.dropbox.com/s/jm910bepij3eunp/in100_r18_to_r50.pth?dl=0)     |
-| STL-10      | R18     | R50     | 93.0%       | [R50 weights](https://www.dropbox.com/s/t4k9yswcyp3a880/stl10_r18_to_r50.pth?dl=0)     |
+| ImageNet-12 | R18     | R50     | 66.2%       | [R50 weights](https://www.dropbox.com/s/mo1d7n3im1aeyou/R50_from_R18_in1k.pth?dl=0)      |
+| ImageNet-12 | R50     | R50     | 55.5%       | [R50 weights](https://www.dropbox.com/s/p1fskmmn96cksy7/R50_from_R50_in1k.pth?dl=0)      |
+| Places365   | R18     | R50     | 50.3%       | [R50 weights](https://www.dropbox.com/s/i3dane5c60qw4d3/R50_from_R18_places365.pth?dl=0) |
+| Flowers101  | R18     | R50     | 81.5%       | [R50 weights](https://www.dropbox.com/s/z5i17cw4u78iaz2/R50_from_R18_flowers101.pth?dl=0)   |
+| Pets37      | R18     | R50     | 76.8%       | [R50 weights](https://www.dropbox.com/s/lxyhsne2jk6gi9h/R50_from_R18_pets37.pth?dl=0)      |
+| IN100       | R18     | R50     | 66.2%       | [R50 weights](https://www.dropbox.com/s/jmtxm11o098dlc2/R50_from_R18_in100.pth?dl=0)     |
+| STL-10      | R18     | R50     | 93.9%       | [R50 weights](https://www.dropbox.com/s/x0uk9g1zgnqlk3j/R50_from_R18_stl10.pth?dl=0)     |
 
 Video x3d_s_e (expanded) models (160x160 crop, 4frames) trained for 400ep:
 
 | Dataset | Teacher | Student  | Performance | Checkpoint                                                                              |
 |---------|---------|----------|-------------|-----------------------------------------------------------------------------------------|
-| K400    | x3d_xs  | x3d_xs_e | 53.57%      | [weights](https://www.dropbox.com/s/zbvtl14jakdltc6/k400-400ep-x3d_xs_wf5_df3.pth?dl=0) |
-| UCF101  | x3d_xs  | x3d_xs_e | 77.32%      | [weights](https://www.dropbox.com/s/vy67dmk41z44c1t/ucf-400ep-x3d_xs_wf5_df3.pth?dl=0)  |
+| K400    | x3d_xs  | x3d_xs_e | 51.8%       | [weights](https://www.dropbox.com/s/97tksbu9qty63z5/k400.pth?dl=0) |
+| UCF101  | x3d_xs  | x3d_xs_e | 75.2%       | [weights](https://www.dropbox.com/s/4zeefz5jtzu9r01/ucf.pth?dl=0)  |
 
 
 ## Citation
