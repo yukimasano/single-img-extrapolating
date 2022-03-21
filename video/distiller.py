@@ -122,7 +122,7 @@ class VideoDistill(pytorch_lightning.LightningModule):
         loss = F.cross_entropy(y_hat, batch["label"])
         acc = self.val_accuracy(F.softmax(y_hat, dim=-1), batch["label"])
         self.log("test_loss", loss, on_step=False, on_epoch=True, sync_dist=True, batch_size=self.batch_size)
-        self.log("test_acc", acc, on_step=False, on_epoch=True,
+        self.log("test_acc", acc, on_step=True, on_epoch=True,
                  prog_bar=True, sync_dist=True, batch_size=self.batch_size)
         return loss
 
@@ -197,11 +197,12 @@ class VideoDataModule(pytorch_lightning.LightningDataModule):
         self.num_frames = 4
 
         self.sampling_rate = 1
-        self.frames_per_second = 12
-        self.clip_duration = (self.num_frames * self.sampling_rate) / self.frames_per_second
+        frames_per_second = 12
+        self.clip_duration = (self.num_frames * self.sampling_rate) / frames_per_second
 
         self.sampling_rate_val = 12
-        self.clip_duration_val = (self.num_frames * self.sampling_rate_val) / 30.
+        frame_per_second_val = 25. if "ucf" in test_data_path.lower() else 30.
+        self.clip_duration_val = (self.num_frames * self.sampling_rate_val) / frame_per_second_val
 
         self.test_data_path = test_data_path
         self.dist_data_path = dist_data_path
@@ -275,6 +276,7 @@ class VideoDataModule(pytorch_lightning.LightningDataModule):
             decode_audio=False,
             transform=test_transform
         )
+
         return torch.utils.data.DataLoader(
             test_dataset,
             batch_size=self.batch_size,

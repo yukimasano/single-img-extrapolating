@@ -5,7 +5,7 @@ from pytorch_lightning import Trainer
 from pytorch_lightning.plugins import DDPPlugin
 from pytorch_lightning.callbacks import LearningRateMonitor
 from pytorch_lightning.loggers import TensorBoardLogger
-
+import torch
 
 from distiller import VideoDistill, VideoDataModule, CheckpointEveryNEpoch
 
@@ -21,7 +21,7 @@ parser.add_argument("--width_factor", default=5.0, type=float)
 parser.add_argument("--teacher_ckpt", default='/path/to/x3d_xs-teacher/ckpt', type=str)
 
 # Optimizer settings
-parser.add_argument("--lr", "--learning-rate", default=1e-3, type=float) # with 2 gpus
+parser.add_argument("--lr", "--learning-rate", default=1e-3, type=float)  # with 2 gpus
 parser.add_argument("--weight_decay", default=0., type=float)
 
 # Training settings
@@ -39,7 +39,7 @@ parser.add_argument("--workers", default=12, type=int)
 # remainder
 parser.add_argument("--eval_every", default=10, type=int)
 parser.add_argument("--save_dir", default='./output/', type=str)
-
+parser.add_argument("--validate", default="", type=str, help="val only")
 
 if __name__ == "__main__":
     args = parser.parse_args()
@@ -70,8 +70,19 @@ if __name__ == "__main__":
                       progress_bar_refresh_rate=1, accelerator='ddp',
                       plugins=[DDPPlugin(find_unused_parameters=False)],
                       resume_from_checkpoint=checkpoint_path+'/last.ckpt' if os.path.isfile(checkpoint_path+'/last.ckpt') else False)
-    # train
-    trainer.fit(distillation_module, data_module)
 
-    # do the 10-temporal-crop eval
-    trainer.test(distillation_module, data_module)
+    if args.validate != '':
+        to_load = checkpoint_path+f'/{args.validate}.ckpt'
+        print("ckpt exists?:", os.path.isfile(to_load), flush=True)
+        ckpt = torch.load(to_load, map_location='cpu')['state_dict']
+        ckpt = {k.replace('student.',''):v for k,v in ckpt.items() if 'student' in k}
+        distillation_module.student.load_state_dict(ckpt)
+        print("loading: ", to_load)
+        # do the 10-temporal-crop eval
+        trainer.test(distillation_module, data_module)
+    else:
+        # train
+        trainer.fit(distillation_module, data_module)
+        trainer.test(distillation_module, data_module)
+
+
