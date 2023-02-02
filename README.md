@@ -87,10 +87,10 @@ Video x3d_s_e (expanded) models (160x160 crop, 4frames) trained for 400ep:
 
 ## Citation
 ```
-@inproceedings{asano2021extrapolating,
-  title={Extrapolating from a Single Image to a Thousand Classes using Distillation},
+@inproceedings{asano2023augmented,
+  title={The Augmented Image Prior: Distilling 1000 Classes by Extrapolating from a Single Image},
   author={Asano, Yuki M. and Saeed, Aaqib},
-  journal={arXiv preprint arXiv:2112.00725},
-  year={2021}
+  journal={ICLR},
+  year={2023}
 }
 ```
