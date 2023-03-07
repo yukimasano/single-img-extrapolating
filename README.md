@@ -1,4 +1,4 @@
-[Extrapolating from a Single Image to a Thousand Classes using Distillation](https://arxiv.org/abs/2112.00725)
+[The Augmented Image Prior: Distilling 1000 Classes by Extrapolating from a Single Image](https://arxiv.org/abs/2112.00725)
 ---
 by Yuki M. Asano* and Aaqib Saeed*  (*Equal Contribution)
 
